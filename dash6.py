@@ -18,9 +18,8 @@ app.layout = html.Div([
         id='graph-type',
         options=[
             {'label': 'Sunburst', 'value': 'sunburst'},
-            {'label': 'Bar', 'value': 'bar'},
-            {'label': 'Scatter', 'value': 'scatter'},
-            {'label': 'Line', 'value': 'line'}
+            {'label': 'Vertical Bar', 'value': 'vbar'},
+            {'label': 'Horizontal Bar', 'value': 'hbar'}
         ],
         value='sunburst'
     ),
@@ -37,15 +36,16 @@ def update_graph(graph_type):
     if graph_type == 'sunburst':
         # Create a sunburst chart using plotly
         fig = px.sunburst(df, path=['Zones', 'Indicator', 'Product', 'Metric'], values='Value')
-    elif graph_type == 'bar':
-        # Create a bar chart using plotly
+    elif graph_type == 'vbar':
+        # Create a vertical bar chart using plotly
         fig = px.bar(df, x='Product', facet_col='Zones', y='Value', color='Metric', barmode='group', facet_row='Indicator')
-    elif graph_type == 'scatter':
-        # Create a scatter chart using plotly
-        fig = px.scatter(df, x='Product', facet_col='Zones', y='Value', color='Metric', facet_row='Indicator')
-    elif graph_type == 'line':
-        # Create a line chart using plotly
-        fig = px.line(df, x='Product', facet_col='Zones', y='Value', color='Metric', facet_row='Indicator')
+        # Increase the distance between rows of subplots
+        fig.update_layout(height=800)
+    elif graph_type == 'hbar':
+        # Create a horizontal bar chart using plotly
+        fig = px.bar(df, y='Product', facet_col='Zones', x='Value', color='Metric', barmode='group', facet_row='Indicator')
+        # Increase the distance between rows of subplots
+        fig.update_layout(height=800)
     return fig
 
 # Run the app on a local server
