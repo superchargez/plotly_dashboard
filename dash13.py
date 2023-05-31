@@ -14,7 +14,7 @@ dropdown = dcc.Dropdown(
     id='chart-type',
     options=[
         {'label': 'Treemap', 'value': 'treemap'},
-        {'label': 'Parallel Categories', 'value': 'parallel_categories'},
+        # {'label': 'Parallel Categories', 'value': 'parallel_categories'},
         {'label': 'Image', 'value': 'image'},
         {'label': 'Sunburst', 'value': 'sunburst'},
         {'label': 'Barplot', 'value': 'barplot'}
@@ -68,7 +68,8 @@ def update_graph(chart_type, zone, heatmap_type, n_clicks):
         fig1 = px.treemap(df, path=['Zones', 'Product', 'Indicator', 'Metric'], values='Value', custom_data=['Value'])
         fig1.update_traces(texttemplate='%{label}<br>%{customdata[0]}')
         if n_clicks > 0:
-            fig1 = px.treemap(df, path=['Zones', 'Product', 'Indicator', 'Metric'], values='Value')
+            fig1 = px.treemap(df, path=['Zones', 'Product', 'Indicator', 'Metric'], values='Value', custom_data=['Value'])
+            fig1.update_traces(texttemplate='%{label}<br>%{customdata[0]}')
         return fig1
     elif chart_type == 'sunburst':
         fig2 = px.sunburst(df, path=['Zones', 'Product', 'Indicator', 'Metric'], values='Value', custom_data=['Value'])
@@ -87,19 +88,38 @@ def update_graph(chart_type, zone, heatmap_type, n_clicks):
 
         for i, value in enumerate(unique_values):
             dff = df[df[heatmap_type] == value]
+            dff = dff[dff['Metric'] == 'Current']
             if heatmap_type == 'Zones':
+                data = dff.pivot_table(index='Product', columns='Indicator', values='Value')
                 heatmap = px.imshow(dff.pivot_table(index='Product', columns='Indicator', values='Value'))
             elif heatmap_type == 'Product':
+                data = dff.pivot_table(index='Zones', columns='Indicator', values='Value')
                 heatmap = px.imshow(dff.pivot_table(index='Zones', columns='Indicator', values='Value'))
             else:
+                data = dff.pivot_table(index='Zones', columns='Product', values='Value')
                 heatmap = px.imshow(dff.pivot_table(index='Zones', columns='Product', values='Value'))
             fig4.add_trace(heatmap.data[0], row=(i // cols) + 1, col=(i % cols) + 1)
+            
+            # Add text annotations
+            for j, row in enumerate(data.values):
+                for k, value in enumerate(row):
+                    color = 'white' if value < 40 else 'black'
+                    fig4.add_annotation(
+                        x=k,
+                        y=j,
+                        text=f'{value:.0f}',
+                        showarrow=False,
+                        font=dict(size=13, color=color),
+                        row=(i // cols) + 1,
+                        col=(i % cols) + 1
+                    )
+
         fig4.update_layout(title=f'Heatmaps by {heatmap_type}', height=800)
         return fig4
     elif chart_type == 'barplot':
         dff = df[df['Zones'] == zone]
         fig = px.bar(dff, x='Product', y='Value', color='Metric', barmode='group', facet_row='Indicator')
-        product_labels = dff["Product"].unique()
+        # product_labels = dff["Product"].unique()
         threshold = 92  # Set a threshold value for the bars.  This is the value for the "ideal" bar.  It will be halfway between the top of the "actual" bar and
         for i, indicator in enumerate(dff["Indicator"].unique()[::-1]):
             fig.update_yaxes(title_text=indicator, row=i + 1, col=1, tickangle=0)
@@ -164,4 +184,4 @@ def update_heatmap_dropdown_visibility(chart_type):
         return {'display': 'none'}
 
 if __name__ == '__main__':
-    app.run_server(debug=True, port=8013)
+    app.run_server(debug=True, host='10.192.4.242',port=8013)
