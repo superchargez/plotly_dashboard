@@ -109,28 +109,44 @@ def update_graph(chart_type, heatmap_type, barplot_type, barplot_value, n_clicks
         fig4.update_layout(title=f'Heatmaps by {heatmap_type}', height=800)
         return fig4
     elif chart_type == 'barplot':
+        # if chart_type == 'barplot':
         dff = df[df[barplot_type] == barplot_value]
         if barplot_type == 'Zones':
             fig = px.bar(dff, x='Product', y='Value', color='Metric', barmode='group', facet_row='Indicator')
         elif barplot_type == 'Product':
             fig = px.bar(dff, x='Zones', y='Value', color='Metric', barmode='group', facet_row='Indicator')
         else:
-            fig = px.bar(dff, x='Zones', y='Value', color='Product', barmode='group', facet_row='Metric')
+            fig = px.bar(dff, x='Zones', y='Value', color='Metric', barmode='group', facet_row='Product')
 
-        threshold = 92
-        for i, indicator in enumerate(dff["Indicator"].unique()[::-1]):
-            fig.update_yaxes(title_text=indicator, row=i + 1, col=1, tickangle=0)
-            for j, metric in enumerate(dff["Metric"].unique()):
-                values = dff[(dff["Indicator"] == indicator) & (dff["Metric"] == metric)]['Value']
-                textposition = ['inside' if value >= threshold else 'outside' for value in values]
-                fig.update_traces(
-                    text=values.astype(str),
-                    textposition=textposition,
-                    textfont_color=['white' if pos == 'inside' else 'black' for pos in textposition],
-                    row=i + 1,
-                    col=1,
-                    selector=dict(legendgroup=metric)
-                )
+        threshold = 85
+        if barplot_type == 'Indicator':
+            for i, product in enumerate(dff["Product"].unique()[::-1]):
+                fig.update_yaxes(title_text=product, row=i + 1, col=1, tickangle=0)
+                for j, metric in enumerate(dff["Metric"].unique()):
+                    values = dff[(dff["Product"] == product) & (dff["Metric"] == metric)]['Value']
+                    textposition = ['inside' if value >= threshold else 'outside' for value in values]
+                    fig.update_traces(
+                        text=values.astype(str),
+                        textposition=textposition,
+                        textfont_color=['white' if pos == 'inside' else 'black' for pos in textposition],
+                        row=i + 1,
+                        col=1,
+                        selector=dict(legendgroup=metric)
+                    )
+        else:
+            for i, indicator in enumerate(dff["Indicator"].unique()[::-1]):
+                fig.update_yaxes(title_text=indicator, row=i + 1, col=1, tickangle=0)
+                for j, metric in enumerate(dff["Metric"].unique()):
+                    values = dff[(dff["Indicator"] == indicator) & (dff["Metric"] == metric)]['Value']
+                    textposition = ['inside' if value >= threshold else 'outside' for value in values]
+                    fig.update_traces(
+                        text=values.astype(str),
+                        textposition=textposition,
+                        textfont_color=['white' if pos == 'inside' else 'black' for pos in textposition],
+                        row=i + 1,
+                        col=1,
+                        selector=dict(legendgroup=metric)
+                    )
 
         fig.update_layout(
             height=800,
@@ -143,8 +159,8 @@ def update_graph(chart_type, heatmap_type, barplot_type, barplot_value, n_clicks
                 showticklabels=True,
                 title=dict(text=barplot_value)
             )
-        )        
-    return fig
+        )
+        return fig
 
 @app.callback(
     Output('back-button', 'style'),
@@ -202,4 +218,4 @@ def update_barplot_value_dropdown_visibility(chart_type):
 
 
 if __name__ == '__main__':
-    app.run_server(debug=True, port=8014)
+    app.run_server(debug=True, port=8020)
