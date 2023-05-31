@@ -1,3 +1,4 @@
+import plotly.graph_objs as go
 from plotly.subplots import make_subplots
 import math, dash
 from dash.dependencies import Input, Output
@@ -14,7 +15,7 @@ dropdown = dcc.Dropdown(
     id='chart-type',
     options=[
         {'label': 'Treemap', 'value': 'treemap'},
-        {'label': 'Parallel Categories', 'value': 'parallel_categories'},
+        # {'label': 'Parallel Categories', 'value': 'parallel_categories'},
         {'label': 'Image', 'value': 'image'},
         {'label': 'Sunburst', 'value': 'sunburst'},
         {'label': 'Barplot', 'value': 'barplot'}
@@ -100,12 +101,31 @@ def update_graph(chart_type, heatmap_type, barplot_type, barplot_value, n_clicks
         for i, value in enumerate(unique_values):
             dff = df[df[heatmap_type] == value]
             if heatmap_type == 'Zones':
+                data = dff.pivot_table(index='Product', columns='Indicator', values='Value')
                 heatmap = px.imshow(dff.pivot_table(index='Product', columns='Indicator', values='Value'))
             elif heatmap_type == 'Product':
+                data = dff.pivot_table(index='Zones', columns='Indicator', values='Value')
                 heatmap = px.imshow(dff.pivot_table(index='Zones', columns='Indicator', values='Value'))
             else:
+                data = dff.pivot_table(index='Zones', columns='Product', values='Value')
                 heatmap = px.imshow(dff.pivot_table(index='Zones', columns='Product', values='Value'))
             fig4.add_trace(heatmap.data[0], row=(i // cols) + 1, col=(i % cols) + 1)
+            
+            # Add text annotations
+            for j, row in enumerate(data.values):
+                for k, value in enumerate(row):
+                    color = 'white' if value < 40 else 'black'
+                    fig4.add_annotation(
+                        x=k,
+                        y=j,
+                        # text=str(value),
+                        text=f'{value:.0f}',
+                        showarrow=False,
+                        font=dict(size=13, color=color),
+                        row=(i // cols) + 1,
+                        col=(i % cols) + 1
+                    )
+
         fig4.update_layout(title=f'Heatmaps by {heatmap_type}', height=800)
         return fig4
     elif chart_type == 'barplot':
