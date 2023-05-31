@@ -81,7 +81,8 @@ def update_graph(chart_type, heatmap_type, barplot_type, barplot_value, n_clicks
         fig1 = px.treemap(df, path=['Zones', 'Product', 'Indicator', 'Metric'], values='Value', custom_data=['Value'])
         fig1.update_traces(texttemplate='%{label}<br>%{customdata[0]}')
         if n_clicks > 0:
-            fig1 = px.treemap(df, path=['Zones', 'Product', 'Indicator', 'Metric'], values='Value')
+            fig1 = px.treemap(df, path=['Zones', 'Product', 'Indicator', 'Metric'], values='Value', custom_data=['Value'])
+            fig1.update_traces(texttemplate='%{label}<br>%{customdata[0]}')
         return fig1
     elif chart_type == 'sunburst':
         fig2 = px.sunburst(df, path=['Zones', 'Product', 'Indicator', 'Metric'], values='Value', custom_data=['Value'])
@@ -100,6 +101,7 @@ def update_graph(chart_type, heatmap_type, barplot_type, barplot_value, n_clicks
 
         for i, value in enumerate(unique_values):
             dff = df[df[heatmap_type] == value]
+            dff = dff[dff['Metric'] == 'Current']
             if heatmap_type == 'Zones':
                 data = dff.pivot_table(index='Product', columns='Indicator', values='Value')
                 heatmap = px.imshow(dff.pivot_table(index='Product', columns='Indicator', values='Value'))
@@ -118,7 +120,6 @@ def update_graph(chart_type, heatmap_type, barplot_type, barplot_value, n_clicks
                     fig4.add_annotation(
                         x=k,
                         y=j,
-                        # text=str(value),
                         text=f'{value:.0f}',
                         showarrow=False,
                         font=dict(size=13, color=color),
@@ -129,7 +130,6 @@ def update_graph(chart_type, heatmap_type, barplot_type, barplot_value, n_clicks
         fig4.update_layout(title=f'Heatmaps by {heatmap_type}', height=800)
         return fig4
     elif chart_type == 'barplot':
-        # if chart_type == 'barplot':
         dff = df[df[barplot_type] == barplot_value]
         if barplot_type == 'Zones':
             fig = px.bar(dff, x='Product', y='Value', color='Metric', barmode='group', facet_row='Indicator')
@@ -238,4 +238,4 @@ def update_barplot_value_dropdown_visibility(chart_type):
 
 
 if __name__ == '__main__':
-    app.run_server(debug=True, port=8020)
+    app.run_server(debug=True, port=8014)
